@@ -52,9 +52,16 @@ def set_parameter(parameter, name, system):
             elif isinstance(value, (list, tuple, np.ndarray)):
                 mx3 += (f'{name}.setregion({subregions_dict[key]}, '
                         'vector({}, {}, {}))\n'.format(*value))
+    
+    elif isinstance(parameter, df.Field):
+        # - Strategy is to write to disk and load the data. 
+        # - Only meant to be called during initialization.
+        # - Terrible for spatiotemporally varying parameters.
+        parameter.write(f'{name}.ovf')
+
+        mx3 += (f'{name}.Add(LoadFile("{name}.ovf"), 1)') # Assuming constant in time
 
     else:
-        # In mumax3, the parameter cannot be set using Field.
         msg = f'Cannot use {type(parameter)} to set parameter.'
         raise TypeError(msg)
 

@@ -15,6 +15,10 @@ def energy_script(system):
     if mm.Demag() not in system.energy:
         mx3 += "enabledemag = false\n\n"
 
+    # mumax complains if exchange is not included
+    if mm.Exchange() not in system.energy:
+        mx3 += 'Aex = 1e-20\n'
+
     return mx3
 
 
@@ -53,37 +57,41 @@ def dmi_script(system):
     mx3 = ''
     if system.energy.dmi.crystalclass.lower() in ['t', 'o']:
         name = 'Dbulk'
+        dmiparam = system.energy.dmi.D
     elif system.energy.dmi.crystalclass.lower() == 'cnv':
         name = 'Dind'
         # In mumax3 D = -D for interfacial DMI
+        dmiparam = -system.energy.dmi.D
     else:
         msg = (f'The {system.energy.dmi.crystalclass} crystal class '
                'is not supported in mumax3.')
         raise ValueError(msg)
 
-    if mm.Exchange() not in system.energy:
-        mx3 += 'Aex = 1e-20\n'
     mx3 += '// DMI\n'
-    mx3 += calculator.scripts.set_parameter(parameter=system.energy.dmi.D,
+    mx3 += calculator.scripts.set_parameter(parameter=dmiparam,
                                             name=name,
                                             system=system)
     return mx3
 
 
-def uniaxialanisotropy_script(term):
+def uniaxialanisotropy_script(system):
     mx3 = "// UniaxialAnisotropy\n"
-    mx3 += f"Ku1 = {term.K1}\n"
-    #mx3 += "Ku2={}\n".format(self.K2)
-    mx3 += "anisu = vector({}, {}, {})\n\n".format(*term.u)
+    # Only including first order for now
+    mx3 += calculator.scripts.set_parameter(parameter=system.energy.uniaxialanisotropy.K,
+                                            name='Ku1',
+                                            system=system)
+    mx3 += "anisu = vector({}, {}, {})\n\n".format(*system.energy.uniaxialanisotropy.u)
 
     return mx3
 
 
-def cubicanisotropy_script(term):
+def cubicanisotropy_script(system):
     mx3 = "// CubicAnisotropy\n"
-    mx3 += f"Kc1 = {term.K1}\n"
-    mx3 += "anisC1 = vector({}, {}, {})\n".format(*self.u1)
-    mx3 += "anisC2 = vector({}, {}, {})\n\n".format(*self.u2)
+    mx3 += calculator.scripts.set_parameter(parameter=system.energy.cubicanisotropy.K,
+                                            name='Kc1',
+                                            system=system)
+    mx3 += "anisC1 = vector({}, {}, {})\n".format(*system.energy.cubicanisotropy.u1)
+    mx3 += "anisC2 = vector({}, {}, {})\n\n".format(*system.energy.cubicanisotropy.u2)
 
     return mx3
 

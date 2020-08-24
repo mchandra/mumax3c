@@ -13,8 +13,8 @@ def driver_script(driver, system, compute=None, **kwargs):
         mx3 += "tableadd(dt)\n"
         mx3 += "tableadd(maxtorque)\n"
 
-
-        mx3 += "minimize()\n\n"
+        #mx3 += "minimize()\n\n"
+        mx3 += "relax()\n\n"
         mx3 += "save(m_full)\n"
         mx3 += "tablesave()\n\n"
 
